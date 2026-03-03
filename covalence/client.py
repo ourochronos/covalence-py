@@ -115,10 +115,14 @@ class CovalenceClient:
         Base URL of the Covalence engine (default ``http://localhost:8430``).
     timeout:
         Default request timeout in seconds (default 30).
+    api_key:
+        Optional API key.  When provided, every request includes
+        ``Authorization: Bearer <api_key>``.  Matches the server-side
+        ``COVALENCE_API_KEY`` env var.
     httpx_client:
         Optional pre-configured :class:`httpx.Client` instance. When provided,
-        ``base_url`` and ``timeout`` are ignored and the caller is responsible
-        for closing the client.
+        ``base_url``, ``timeout``, and ``api_key`` are ignored and the caller
+        is responsible for closing the client.
     """
 
     def __init__(
@@ -126,13 +130,17 @@ class CovalenceClient:
         base_url: str = DEFAULT_BASE_URL,
         *,
         timeout: float = DEFAULT_TIMEOUT,
+        api_key: str | None = None,
         httpx_client: httpx.Client | None = None,
     ) -> None:
         self._owns_client = httpx_client is None
+        base_headers: dict[str, str] = {"Content-Type": "application/json"}
+        if api_key:
+            base_headers["Authorization"] = f"Bearer {api_key}"
         self._client = httpx_client or httpx.Client(
             base_url=base_url.rstrip("/"),
             timeout=timeout,
-            headers={"Content-Type": "application/json"},
+            headers=base_headers,
         )
 
     # ------------------------------------------------------------------
